@@ -303,7 +303,3 @@ MIT License - see LICENSE file for details.
 ## Repository
 
 **GitHub**: [https://github.com/Shannu320/Real-estate](https://github.com/Shannu320/Real-estate)
-
-## Contact
-
-Prem Kumar Reddy - [GitHub](https://github.com/premkumarreddy)
