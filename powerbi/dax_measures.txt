@@ -1,0 +1,132 @@
+-- ============================================
+-- REAL ESTATE PRICE INTELLIGENCE - DAX MEASURES
+-- ============================================
+
+-- 1. BASIC PRICE MEASURES
+Average Price = AVERAGE('kc_house_for_powerbi'[price])
+Median Price = MEDIAN('kc_house_for_powerbi'[price])
+Min Price = MIN('kc_house_for_powerbi'[price])
+Max Price = MAX('kc_house_for_powerbi'[price])
+Price StdDev = STDEV.P('kc_house_for_powerbi'[price])
+Total Properties = COUNTROWS('kc_house_for_powerbi')
+
+-- 2. PRICE PER SQFT MEASURES
+Avg Price Per SqFt = AVERAGE('kc_house_for_powerbi'[price_per_sqft])
+Median Price Per SqFt = MEDIAN('kc_house_for_powerbi'[price_per_sqft])
+Price Per SqFt StdDev = STDEV.P('kc_house_for_powerbi'[price_per_sqft])
+
+-- 3. PREDICTION ACCURACY MEASURES
+Avg Prediction Error = AVERAGE('kc_house_for_powerbi'[abs_error])
+Median Prediction Error = MEDIAN('kc_house_for_powerbi'[abs_error])
+MAPE = AVERAGE('kc_house_for_powerbi'[pct_error])
+Accuracy Within 10% = DIVIDE(
+    CALCULATE(COUNTROWS('kc_house_for_powerbi'), 'kc_house_for_powerbi'[prediction_accurate_10] = 1),
+    COUNTROWS('kc_house_for_powerbi')
+)
+Accuracy Within 20% = DIVIDE(
+    CALCULATE(COUNTROWS('kc_house_for_powerbi'), 'kc_house_for_powerbi'[prediction_accurate_20] = 1),
+    COUNTROWS('kc_house_for_powerbi')
+)
+RMSE = SQRT(AVERAGEX('kc_house_for_powerbi', 'kc_house_for_powerbi'[residual]^2))
+MAE = AVERAGE('kc_house_for_powerbi'[abs_error])
+R_Squared = 1 - DIVIDE(
+    SUMX('kc_house_for_powerbi', 'kc_house_for_powerbi'[residual]^2),
+    SUMX('kc_house_for_powerbi', ('kc_house_for_powerbi'[price] - AVERAGE('kc_house_for_powerbi'[price]))^2)
+)
+
+-- 4. PRICE BY CATEGORY MEASURES
+Avg Price by Zipcode = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[zipcode]))
+Median Price by Zipcode = CALCULATE([Median Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[zipcode]))
+Property Count by Zipcode = CALCULATE([Total Properties], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[zipcode]))
+
+Avg Price by Bedrooms = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[bedrooms]))
+Avg Price by Bathrooms = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[bathrooms]))
+Avg Price by Condition = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[condition]))
+Avg Price by Grade = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[grade]))
+Avg Price by Waterfront = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[waterfront]))
+Avg Price by View = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[view]))
+Avg Price by Age Band = CALCULATE([Average Price], ALLEXCEPT('kc_house_for_powerbi', 'kc_house_for_powerbi'[age_band]))
+
+-- 5. TIME INTELLIGENCE MEASURES
+Avg Price YoY = 
+VAR CurrentYear = MAX('kc_house_for_powerbi'[sale_year])
+VAR PriorYear = CurrentYear - 1
+RETURN
+    CALCULATE(
+        [Average Price],
+        'kc_house_for_powerbi'[sale_year] = PriorYear
+    )
+
+Price YoY Change % = DIVIDE([Average Price] - [Avg Price YoY], [Avg Price YoY])
+
+Avg Price QoQ = 
+VAR CurrentQuarter = MAX('kc_house_for_powerbi'[sale_quarter])
+VAR CurrentYear = MAX('kc_house_for_powerbi'[sale_year])
+VAR PriorQuarter = IF(CurrentQuarter = 1, 4, CurrentQuarter - 1)
+VAR PriorYear = IF(CurrentQuarter = 1, CurrentYear - 1, CurrentYear)
+RETURN
+    CALCULATE(
+        [Average Price],
+        'kc_house_for_powerbi'[sale_year] = PriorYear,
+        'kc_house_for_powerbi'[sale_quarter] = PriorQuarter
+    )
+
+Price QoQ Change % = DIVIDE([Average Price] - [Avg Price QoQ], [Avg Price QoQ])
+
+-- 6. PROPERTY CHARACTERISTICS
+Avg SqFt Living = AVERAGE('kc_house_for_powerbi'[sqft_living])
+Avg Lot Size = AVERAGE('kc_house_for_powerbi'[sqft_lot])
+Avg Bedrooms = AVERAGE('kc_house_for_powerbi'[bedrooms])
+Avg Bathrooms = AVERAGE('kc_house_for_powerbi'[bathrooms])
+Avg Property Age = AVERAGE('kc_house_for_powerbi'[age])
+% Waterfront = DIVIDE(
+    CALCULATE(COUNTROWS('kc_house_for_powerbi'), 'kc_house_for_powerbi'[waterfront] = 1),
+    COUNTROWS('kc_house_for_powerbi')
+)
+% Renovated = DIVIDE(
+    CALCULATE(COUNTROWS('kc_house_for_powerbi'), 'kc_house_for_powerbi'[is_renovated] = 1),
+    COUNTROWS('kc_house_for_powerbi')
+)
+% With Basement = DIVIDE(
+    CALCULATE(COUNTROWS('kc_house_for_powerbi'), 'kc_house_for_powerbi'[has_basement] = 1),
+    COUNTROWS('kc_house_for_powerbi')
+)
+
+-- 7. MARKET SEGMENTATION
+Luxury Properties = CALCULATE(
+    [Total Properties],
+    'kc_house_for_powerbi'[price] >= PERCENTILEX.INC('kc_house_for_powerbi', 'kc_house_for_powerbi'[price], 0.9)
+)
+Affordable Properties = CALCULATE(
+    [Total Properties],
+    'kc_house_for_powerbi'[price] <= PERCENTILEX.INC('kc_house_for_powerbi', 'kc_house_for_powerbi'[price], 0.25)
+)
+Mid-Range Properties = [Total Properties] - [Luxury Properties] - [Affordable Properties]
+
+-- 8. PREDICTION INTERVAL MEASURES
+Prediction Interval Width 95 = 1.96 * [RMSE]
+Prediction Interval Width 80 = 1.28 * [RMSE]
+
+Lower Bound 95 = [Average Price] - [Prediction Interval Width 95]
+Upper Bound 95 = [Average Price] + [Prediction Interval Width 95]
+
+-- 9. CONDITIONAL FORMATTING HELPERS
+Price Color = 
+SWITCH(
+    TRUE(),
+    [Average Price] >= 1000000, "#8B0000",
+    [Average Price] >= 750000, "#FF4500",
+    [Average Price] >= 500000, "#FFA500",
+    [Average Price] >= 350000, "#FFD700",
+    "#32CD32"
+)
+
+Error Color = 
+SWITCH(
+    TRUE(),
+    [MAPE] >= 30, "#8B0000",
+    [MAPE] >= 20, "#FF4500",
+    [MAPE] >= 15, "#FFA500",
+    [MAPE] >= 10, "#FFD700",
+    "#32CD32"
+)

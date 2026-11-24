@@ -1,0 +1,49 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data files
+data/raw/*.csv
+data/processed/*.csv
+data/processed/*.pkl
+data/external/*
+
+# Model files
+models/*.pkl
+
+# Reports
+reports/figures/*.png
+reports/*.csv
+reports/*.md
+
+# Power BI
+powerbi/*.pbix
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Kaggle
+kaggle.json
